@@ -5,6 +5,10 @@
 #include <QFile>
 #include <QtCore>
 #include <QtGui>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QFile>
 
 namespace Ui {
 class MainWindow;
@@ -20,6 +24,10 @@ public:
     
 private:
     Ui::MainWindow *ui;
+     QNetworkAccessManager* networkManager;
+
+private slots:
+    void downloadFinished(QNetworkReply *reply);
 };
 
 #endif // MAINWINDOW_H
