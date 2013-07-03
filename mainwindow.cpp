@@ -34,16 +34,15 @@ MainWindow::MainWindow(QWidget *parent) :
     tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
     tableModel->select();
 
-
-    // Attach it to the view
+    // Attach it to the view, and make it read only
     ui->tableView->setModel(tableModel);
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
     qDebug() << "Last Error: " << db.lastError().text();
 
-    ui->tableView->setEnabled(false);
     tableModel->removeColumns(0,27);
     tableModel->insertColumn(1);
     tableModel->insertColumn(22);
-
 }
 
 MainWindow::~MainWindow()
