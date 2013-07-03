@@ -1,6 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
+#include <QSqlTableModel>
+#include <QList>
+#include <QSqlError>
+#include <QSqlDatabase>
+#include <QtSql>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -8,56 +13,30 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    int fileLength = 0;
-    int COLUMNS = 3;
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+     db.setHostName("localhost");
+    db.setDatabaseName("systemMap.db");
 
-    QFile sFile("mapSolarSystems.csv");
-
-    if(sFile.open(QFile::ReadOnly | QFile::Text))
+    if (!db.open())
     {
-        QTextStream stream(&sFile);
-
-        //Now we can just handle the rest of the file, we only need the number of rows
-        while (!stream.atEnd())
-        {
-            stream.readLine();
-            ++fileLength;
-        }
-
-        stream.reset();
-        stream.seek(0);
-
-        ui->mainTableWidget->setRowCount(fileLength);
-        ui->mainTableWidget->setColumnCount(3);
-
-        /*for(int i = 0; i < stoneFileLength ; i++)
-        {
-            stone[i] = stream.readLine();
-        }*/
-
-        //Start on the second row
-        stream.readLine();
-        int currentRow=1;
-
-        while (!stream.atEnd())
-        {
-            QString line = stream.readLine();
-            QStringList strings = line.split(",");
-
-            QLabel *Label1 = new QLabel(strings[3]);
-            QLabel *Label2 = new QLabel(strings[21]);
-
-            ui->mainTableWidget->setCellWidget(currentRow,1,Label1);
-            ui->mainTableWidget->setCellWidget(currentRow,2,Label2);
-
-            ++currentRow;
-        }
-
-
+        qDebug() << "error opening DB";
+    }
+    else
+    {
+        qDebug() <<"opened db";
+        qDebug() <<"Last error" << db.lastError().text();
+        QList<QString> tables = db.tables();
+        qDebug() << "number of tables: " << tables.length();
     }
 
-    sFile.close();
+    QSqlTableModel *tableModel = new QSqlTableModel(this,db);
+    tableModel->setTable("Systems");
+    tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    tableModel->select();
 
+    // Attach it to the view
+    ui->tableView->setModel(tableModel);
+    qDebug() << "Last Error: " << db.lastError().text();
 
 }
 
