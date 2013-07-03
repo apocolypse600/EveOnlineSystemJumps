@@ -9,6 +9,10 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QFile>
+#include <QSqlError>
+#include <QSqlDatabase>
+#include <QtSql>
+
 
 namespace Ui {
 class MainWindow;
@@ -25,9 +29,12 @@ public:
 private:
     Ui::MainWindow *ui;
      QNetworkAccessManager* networkManager;
+     QSqlTableModel *tableModel;
 
 private slots:
     void downloadFinished(QNetworkReply *reply);
+    void on_lineEdit_2_textChanged(const QString &arg1);
+    void on_doubleSpinBox_valueChanged(double arg1);
 };
 
 #endif // MAINWINDOW_H

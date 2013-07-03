@@ -3,9 +3,6 @@
 #include <QDebug>
 #include <QSqlTableModel>
 #include <QList>
-#include <QSqlError>
-#include <QSqlDatabase>
-#include <QtSql>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -17,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle("Eve Online Jump Calculator");
 
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-     db.setHostName("localhost");
+    db.setHostName("localhost");
     db.setDatabaseName("systemMap.db");
 
     if (!db.open())
@@ -32,17 +29,22 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug() << "number of tables: " << tables.length();
     }
 
-    QSqlTableModel *tableModel = new QSqlTableModel(this,db);
+    tableModel = new QSqlTableModel(this,db);
     tableModel->setTable("Systems");
     tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
     tableModel->select();
+    tableModel->insertColumn(26);
+    //tableModel->horizontalHeader()->set
 
     // Attach it to the view, and make it read only
     ui->tableView->setModel(tableModel);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    ui->tableView->setSortingEnabled(true);
+    tableModel->sort(3,Qt::AscendingOrder);
+
     //hide all of the columns, then re-show the ones we are interested in
-    for(int i = 0; i<27;i++)
+    for(int i = 0; i<26;++i)
     {
         ui->tableView->hideColumn(i);
     }
@@ -51,10 +53,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
+
     qDebug() << "Last Error: " << db.lastError().text();
 
     //Now we grab the file from the Eve website
-
 
     networkManager = new QNetworkAccessManager(this);
     //TODO uncomment this when it caches the data properly connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
@@ -83,4 +85,22 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
 
         qDebug() << "Download of API data succeeded";
     }
+}
+
+void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
+{
+    qDebug() << "SOLARSYSTEMNAME='" + ui->lineEdit_2->text() + "'";
+    tableModel->setFilter("SOLARSYSTEMNAME='" + ui->lineEdit_2->text() + "'");
+    tableModel->select();
+    if(ui->lineEdit_2->text() == "")
+    {
+        tableModel->setFilter("");
+        tableModel->select();
+    }
+}
+
+void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
+{
+    qDebug() << "SECURITY>" + QString::number(ui->doubleSpinBox->value());
+    tableModel->setFilter("SECURITY>" + QString::number(ui->doubleSpinBox->value()));
 }
