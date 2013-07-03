@@ -89,18 +89,11 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
 
 void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
 {
-    qDebug() << "SOLARSYSTEMNAME='" + ui->lineEdit_2->text() + "'";
-    tableModel->setFilter("SOLARSYSTEMNAME='" + ui->lineEdit_2->text() + "'");
-    tableModel->select();
-    if(ui->lineEdit_2->text() == "")
-    {
-        tableModel->setFilter("");
-        tableModel->select();
-    }
+    tableModel->setFilter("SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'");
 }
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 {
-    qDebug() << "SECURITY>" + QString::number(ui->doubleSpinBox->value());
-    tableModel->setFilter("SECURITY>" + QString::number(ui->doubleSpinBox->value()));
+    qDebug() << "SECURITY>'" + QString::number(ui->doubleSpinBox->value()) + "'";
+    tableModel->setFilter("SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'");
 }
