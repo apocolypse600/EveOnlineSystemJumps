@@ -38,11 +38,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setModel(tableModel);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    for(int i = 0; i<27;i++)
+    {
+        ui->tableView->hideColumn(i);
+    }
+
+    ui->tableView->showColumn(3);
+    ui->tableView->showColumn(22);
+
     qDebug() << "Last Error: " << db.lastError().text();
 
-    tableModel->removeColumns(0,27);
-    tableModel->insertColumn(1);
-    tableModel->insertColumn(22);
+
 }
 
 MainWindow::~MainWindow()
