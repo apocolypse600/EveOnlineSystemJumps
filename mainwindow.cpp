@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QSqlTableModel>
 #include <QList>
-
+#include <QtXml>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     tableModel->setTable("Systems");
     tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
     tableModel->select();
-    tableModel->insertColumn(26);
+    //tableModel->insertColumn(26);
     //tableModel->horizontalHeader()->set
 
     // Attach it to the view, and make it read only
@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     ui->tableView->showColumn(3);
     ui->tableView->showColumn(21);
-
+    //ui->tableView->insertColumn(26);
     ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
 
@@ -61,6 +61,49 @@ MainWindow::MainWindow(QWidget *parent) :
     networkManager = new QNetworkAccessManager(this);
     //TODO uncomment this when it caches the data properly connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
     networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
+
+    //Now need to read the XML file we grabbed
+
+    QDomDocument apiData;
+
+    //load the file
+    QFile file("Jumps.xml");
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "failed to open file";
+    }
+    else
+    {
+        if(!apiData.setContent(&file))
+        {
+            qDebug() << "failed to load document";
+        }
+        file.close();
+    }
+
+    //get the root element
+    QDomElement root = apiData.firstChildElement();
+    qDebug() <<"API version (expecting 2) : " << root.attributeNode("version").value();
+
+    QDomElement dataRoot = root.firstChildElement("result").firstChildElement("rowset");
+    QDomNodeList rows = dataRoot.elementsByTagName("row");
+
+    for (int i = 0; rows.count() ; ++i)
+    {
+        QDomNode currentRow = rows.at(i);
+
+        //convert to element
+        if(currentRow.isElement())
+        {
+            QDomElement row = currentRow.toElement();
+            qDebug() << row.attributeNode("solarSystemID").value();
+            qDebug() << row.attributeNode("shipJumps").value();
+        }
+
+    }
+
+    file.close();
+
 }
 
 MainWindow::~MainWindow()
