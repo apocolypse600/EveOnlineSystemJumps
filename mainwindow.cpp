@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName("localhost");
     db.setDatabaseName("systemMap.db");
-    db.setConnectOptions("QSQLITE_OPEN_READONLY");
+    //db.setConnectOptions("QSQLITE_OPEN_READONLY");
 
     if (!db.open())
     {
@@ -54,18 +54,20 @@ MainWindow::MainWindow(QWidget *parent) :
     tableModel->sort(2,Qt::AscendingOrder);
 
     //hide all of the columns, then re-show the ones we are interested in
-    for(int i = 0; i<28;++i)
+    /*for(int i = 0; i<4;++i)
     {
         ui->tableView->hideColumn(i);
-    }
+    }*/
+
 
     ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     //Move the Jumps column to the end
-    ui->tableView->horizontalHeader()->moveSection(1,27);
+    ui->tableView->horizontalHeader()->moveSection(0,3);
+    //ui->tableView->hideColumn(3);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->tableView->showColumn(5);
+    /*ui->tableView->showColumn(5);
     ui->tableView->showColumn(23);
-    ui->tableView->showColumn(1);
+    ui->tableView->showColumn(1);*/
 
     //Now we grab the file from the Eve website
 
@@ -73,6 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //TODO uncomment these when it caches the data properly
     //connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
     //networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
+
+    //Need to force a wait for the file to be downloaded
 
     //Now need to read the XML file we grabbed
 
@@ -103,8 +107,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Reset the jump column
 
-    qDebug() << "setting jump column to 0";
-    db.exec("UPDATE Systems SET JUMPS=0");
+    //qDebug() << "setting jump column to 0";
+    //db.exec("UPDATE Systems SET JUMPS=0");
     if(tableModel->submitAll())
     {
         qDebug() << "reset and saved to db";
@@ -126,7 +130,7 @@ MainWindow::MainWindow(QWidget *parent) :
             QString id = row.attributeNode("solarSystemID").value();
             QString numberOfJumps = row.attributeNode("shipJumps").value();
 
-            QSqlQuery dbquery(db);
+            /*QSqlQuery dbquery(db);
             dbquery.exec("SELECT NUMBER from Systems where SOLARSYSTEMID='" + id + "'");
             while(dbquery.next())
             {
@@ -149,12 +153,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-            }
+            }*/
 
-            /*QString query = "UPDATE Systems SET JUMPS=" + numberOfJumps + " WHERE SOLARSYSTEMID='" + id + "'";
+            QString query = "UPDATE Systems SET JUMPS=" + numberOfJumps + " WHERE SOLARSYSTEMID='" + id + "'";
 
             qDebug() << query;
-            db.exec(query);*/
+            db.exec(query);
             qDebug() << (double)i/numberOfRows*100 <<  "% done ";
 
 
