@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Now need to read the XML file we grabbed
 
-    QDomDocument apiData;
+    /* QDomDocument apiData;
 
     //load the file
     QFile file("Jumps.xml");
@@ -96,13 +96,13 @@ MainWindow::MainWindow(QWidget *parent) :
         if(currentRow.isElement())
         {
             QDomElement row = currentRow.toElement();
-            qDebug() << row.attributeNode("solarSystemID").value();
-            qDebug() << row.attributeNode("shipJumps").value();
+            //qDebug() << row.attributeNode("solarSystemID").value();
+            //qDebug() << row.attributeNode("shipJumps").value();
         }
 
     }
 
-    file.close();
+    file.close();*/
 
 }
 
@@ -132,11 +132,27 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
 
 void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
 {
-    tableModel->setFilter("SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'");
+    //tableModel->setFilter("SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'");
+    updateFilters();
 }
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 {
-    qDebug() << "SECURITY>'" + QString::number(ui->doubleSpinBox->value()) + "'";
-    tableModel->setFilter("SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'");
+    //qDebug() << "SECURITY>'" + QString::number(ui->doubleSpinBox->value()) + "'";
+    //tableModel->setFilter("SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'");
+    updateFilters();
+}
+
+void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
+{
+    //qDebug() << tableModel->filter() + "SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'";
+    //tableModel->setFilter(tableModel->filter() + " SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'");
+    updateFilters();
+}
+
+void MainWindow::updateFilters()
+{
+    QString filter = "SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'" +" AND SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'" + "AND SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'";
+    qDebug() <<"New Filter:" << filter;
+    tableModel->setFilter(filter);
 }
