@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName("localhost");
     db.setDatabaseName("systemMap.db");
+    db.setConnectOptions("QSQLITE_OPEN_READONLY");
 
     if (!db.open())
     {
@@ -32,35 +33,46 @@ MainWindow::MainWindow(QWidget *parent) :
     tableModel = new QSqlTableModel(this,db);
     tableModel->setTable("Systems");
     tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    tableModel->select();
-    //tableModel->insertColumn(26);
-    //tableModel->horizontalHeader()->set
 
-    // Attach it to the view, and make it read only
+    tableModel->select();
+    //qDebug() << "row count" << tableModel->rowCount();
+
+    while(tableModel->canFetchMore())
+    {
+        //qDebug() << "fetched more";
+        tableModel->fetchMore();
+    }
+
+   // qDebug() << "row count" << tableModel->rowCount();
+
+    // Attach it to the view
     ui->tableView->setModel(tableModel);
-    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+   // qDebug() << "row count" << tableModel->rowCount();
 
     ui->tableView->setSortingEnabled(true);
-    tableModel->sort(3,Qt::AscendingOrder);
+    tableModel->sort(2,Qt::AscendingOrder);
 
     //hide all of the columns, then re-show the ones we are interested in
-    for(int i = 0; i<26;++i)
+    for(int i = 0; i<28;++i)
     {
         ui->tableView->hideColumn(i);
     }
-    ui->tableView->showColumn(3);
-    ui->tableView->showColumn(21);
-    //ui->tableView->insertColumn(26);
+
     ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-
-
-    qDebug() << "Last Error: " << db.lastError().text();
+    //Move the Jumps column to the end
+    ui->tableView->horizontalHeader()->moveSection(1,27);
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView->showColumn(5);
+    ui->tableView->showColumn(23);
+    ui->tableView->showColumn(1);
 
     //Now we grab the file from the Eve website
 
     networkManager = new QNetworkAccessManager(this);
-    //TODO uncomment this when it caches the data properly connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
-    networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
+    //TODO uncomment these when it caches the data properly
+    //connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
+    //networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
 
     //Now need to read the XML file we grabbed
 
@@ -87,9 +99,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QDomElement dataRoot = root.firstChildElement("result").firstChildElement("rowset");
     QDomNodeList rows = dataRoot.elementsByTagName("row");
-    qDebug() << rows.count();
+    int numberOfRows = rows.count();
 
-    for (int i = 0; i < rows.count() ; ++i)
+    //Reset the jump column
+
+    qDebug() << "setting jump column to 0";
+    db.exec("UPDATE Systems SET JUMPS=0");
+    if(tableModel->submitAll())
+    {
+        qDebug() << "reset and saved to db";
+    }
+    else
+    {
+        qDebug() << db.lastError().text();
+    }
+
+
+    for (int i = 0; i < numberOfRows ; ++i)
     {
         QDomNode currentRow = rows.at(i);
 
@@ -97,12 +123,61 @@ MainWindow::MainWindow(QWidget *parent) :
         if(currentRow.isElement())
         {
             QDomElement row = currentRow.toElement();
-            qDebug() << row.attributeNode("solarSystemID").value() << row.attributeNode("shipJumps").value();
+            QString id = row.attributeNode("solarSystemID").value();
+            QString numberOfJumps = row.attributeNode("shipJumps").value();
+
+            QSqlQuery dbquery(db);
+            dbquery.exec("SELECT NUMBER from Systems where SOLARSYSTEMID='" + id + "'");
+            while(dbquery.next())
+            {
+                while(tableModel->canFetchMore())
+                {
+                    //qDebug() << "fetched more";
+                    tableModel->fetchMore();
+                }
+
+                //qDebug() << dbquery.value(0).toString();
+                if(tableModel->setData(tableModel->index(dbquery.value(0).toInt(),1),numberOfJumps))
+                {
+                    //qDebug() << "Data set at row " << dbquery.value(0).toInt();
+                }
+                else
+                {
+                   // qDebug() << "row count" << tableModel->rowCount();
+                   // qDebug() << "Data failed at row " << dbquery.value(0).toInt();
+                }
+
+
+
+            }
+
+            /*QString query = "UPDATE Systems SET JUMPS=" + numberOfJumps + " WHERE SOLARSYSTEMID='" + id + "'";
+
+            qDebug() << query;
+            db.exec(query);*/
+            qDebug() << (double)i/numberOfRows*100 <<  "% done ";
+
+
+
+
         }
 
-        qDebug() << "finished with xml data";
+
     }
 
+    //save changes to DB
+    if(tableModel->submitAll())
+    {
+        qDebug() << "Saved new values to DB";
+    }
+    else
+    {
+        qDebug() << db.lastError().text();
+    }
+
+    QSqlDatabase::removeDatabase("QSQLITE");
+
+    qDebug() << "finished with xml data";
     file.close();
 
 }
@@ -156,4 +231,5 @@ void MainWindow::updateFilters()
     QString filter = "SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'" +" AND SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'" + "AND SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'";
     qDebug() <<"New Filter:" << filter;
     tableModel->setFilter(filter);
+    //tableModel->select();
 }
