@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Now need to read the XML file we grabbed
 
-    /* QDomDocument apiData;
+    QDomDocument apiData;
 
     //load the file
     QFile file("Jumps.xml");
@@ -87,8 +87,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QDomElement dataRoot = root.firstChildElement("result").firstChildElement("rowset");
     QDomNodeList rows = dataRoot.elementsByTagName("row");
+    qDebug() << rows.count();
 
-    for (int i = 0; rows.count() ; ++i)
+    for (int i = 0; i < rows.count() ; ++i)
     {
         QDomNode currentRow = rows.at(i);
 
@@ -96,13 +97,13 @@ MainWindow::MainWindow(QWidget *parent) :
         if(currentRow.isElement())
         {
             QDomElement row = currentRow.toElement();
-            //qDebug() << row.attributeNode("solarSystemID").value();
-            //qDebug() << row.attributeNode("shipJumps").value();
+            qDebug() << row.attributeNode("solarSystemID").value() << row.attributeNode("shipJumps").value();
         }
 
+        qDebug() << "finished with xml data";
     }
 
-    file.close();*/
+    file.close();
 
 }
 
