@@ -70,9 +70,8 @@ MainWindow::MainWindow(QWidget *parent) :
         //Now we grab the file from the Eve website
         networkManager = new QNetworkAccessManager(this);
         connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
-        //ui->statusBar->showMessage("Downloading API data ...",3000);
-        //networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
-        parseXML();
+        ui->statusBar->showMessage("Downloading API data ...",3000);
+        networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
     }
 
 }
@@ -106,21 +105,16 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
 
 void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
 {
-    //tableModel->setFilter("SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'");
     updateFilters();
 }
 
 void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
 {
-    //qDebug() << "SECURITY>'" + QString::number(ui->doubleSpinBox->value()) + "'";
-    //tableModel->setFilter("SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'");
     updateFilters();
 }
 
 void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
 {
-    //qDebug() << tableModel->filter() + "SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'";
-    //tableModel->setFilter(tableModel->filter() + " SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'");
     updateFilters();
 }
 
@@ -157,8 +151,6 @@ void MainWindow::parseXML()
     QDomElement root = apiData.firstChildElement();
     qDebug() <<"API version (expecting 2) : " << root.attributeNode("version").value();
 
-    //ui->statusBar->showMessage(root.firstChildElement("cachedUntill").attribute());
-
     QDomElement dataRoot = root.firstChildElement("result").firstChildElement("rowset");
     QDomNodeList rows = dataRoot.elementsByTagName("row");
     int numberOfRows = rows.count();
@@ -194,7 +186,9 @@ void MainWindow::parseXML()
     //update the view
     tableModel->select();
 
-    //qDebug() << QDate::currentDate() << "     " << QTime::currentTime();
+    QString cachedDate = apiData.firstChildElement().toElement().elementsByTagName("cachedUntil").at(0).toElement().text();
+    ui->statusBar->showMessage("cached data is current untill " + cachedDate.split(" ").at(1) + " UTC");
+
 }
 
 bool MainWindow::dataIsCurrent()
