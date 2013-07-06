@@ -4,6 +4,7 @@
 #include <QSqlTableModel>
 #include <QList>
 #include <QtXml>
+#include <QDate>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,9 +26,6 @@ MainWindow::MainWindow(QWidget *parent) :
     else
     {
         qDebug() <<"opened db";
-        qDebug() <<"Last error" << db.lastError().text();
-        QList<QString> tables = db.tables();
-        qDebug() << "number of tables: " << tables.length();
     }
 
     tableModel = new QSqlTableModel(this,db);
@@ -60,23 +58,22 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->hideColumn(1);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    //Now we grab the file from the Eve website
+    if(dataIsCurrent())
+    {
+        ui->statusBar->showMessage("cached data is current");
+    }
+    else
+    {
+        //Reset the jump column
+        db.exec("UPDATE Systems SET JUMPS=0");
 
-    networkManager = new QNetworkAccessManager(this);
-    //TODO uncomment these when it caches the data properly
-    //connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
-    //networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
-    //ui->statusBar->showMessage("Downloading API data ...",3000);
-    //Need to force a wait for the file to be downloaded
-
-    //Reset the jump column
-    db.exec("UPDATE Systems SET JUMPS=0");
-
-    //Now need to read the XML file we grabbed
-    parseXML();
-
-    qDebug() << "finished with xml data";
-
+        //Now we grab the file from the Eve website
+        networkManager = new QNetworkAccessManager(this);
+        connect(networkManager, SIGNAL(finished(QNetworkReply*)), SLOT(downloadFinished(QNetworkReply*)));
+        //ui->statusBar->showMessage("Downloading API data ...",3000);
+        //networkManager->get(QNetworkRequest(QUrl("https://api.eveonline.com/map/Jumps.xml.aspx")));
+        parseXML();
+    }
 
 }
 
@@ -102,6 +99,9 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
 
         qDebug() << "Download of API data succeeded";
     }
+
+    //Now need to read the XML file we grabbed
+    parseXML();
 }
 
 void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
@@ -134,6 +134,8 @@ void MainWindow::updateFilters()
 
 void MainWindow::parseXML()
 {
+    //ui->statusBar->showMessage("Parsing API data ...",3000);
+
     QDomDocument apiData;
 
     //load the file
@@ -154,6 +156,8 @@ void MainWindow::parseXML()
     //get the root element
     QDomElement root = apiData.firstChildElement();
     qDebug() <<"API version (expecting 2) : " << root.attributeNode("version").value();
+
+    //ui->statusBar->showMessage(root.firstChildElement("cachedUntill").attribute());
 
     QDomElement dataRoot = root.firstChildElement("result").firstChildElement("rowset");
     QDomNodeList rows = dataRoot.elementsByTagName("row");
@@ -184,4 +188,47 @@ void MainWindow::parseXML()
     db.commit();
 
     file.close();
+
+    qDebug() << "finished with xml data";
+
+    //update the view
+    tableModel->select();
+
+    //qDebug() << QDate::currentDate() << "     " << QTime::currentTime();
+}
+
+bool MainWindow::dataIsCurrent()
+{
+    QDomDocument apiData;
+
+    //load the file if something goes wrong, we need to redownload
+    QFile file("Jumps.xml");
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return false;
+    }
+    else
+    {
+        if(!apiData.setContent(&file))
+        {
+            qDebug() << "failed to load document";
+            return false;
+        }
+        file.close();
+    }
+
+    //There has to be a better way to do this
+    QString cachedDate = apiData.firstChildElement().toElement().elementsByTagName("cachedUntil").at(0).toElement().text();
+
+    qDebug() << "comparing " << cachedDate << "to" << QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss");
+    if(cachedDate <= QDateTime::currentDateTimeUtc().toString("yyyy-MM-dd hh:mm:ss"))
+    {
+        qDebug() << "current cached data is not current";
+        return false;
+    }
+    else
+    {
+        qDebug() << "current cached data is current";
+        return true;
+    }
 }

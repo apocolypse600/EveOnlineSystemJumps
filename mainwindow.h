@@ -31,6 +31,8 @@ private:
      QNetworkAccessManager* networkManager;
      QSqlTableModel *tableModel;
      QSqlDatabase db;
+     void parseXML();
+     bool dataIsCurrent();
 
 private slots:
     void downloadFinished(QNetworkReply *reply);
@@ -38,7 +40,7 @@ private slots:
     void on_doubleSpinBox_valueChanged(double arg1);
     void on_doubleSpinBox_2_valueChanged(double arg1);
     void updateFilters();
-    void parseXML();
+
 };
 
 #endif // MAINWINDOW_H
