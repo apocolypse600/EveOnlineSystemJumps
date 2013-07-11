@@ -28,31 +28,31 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="labelFilters">
         <property name="text">
          <string>Filters:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="labelFilterName">
         <property name="text">
          <string>Name is</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit_2"/>
+       <widget class="QLineEdit" name="lineEditNameFilter"/>
       </item>
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="labelFilterSecurity">
         <property name="text">
          <string>Security status Between</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <widget class="QDoubleSpinBox" name="doubleSpinBoxFilterMinSecurity">
         <property name="minimum">
          <double>-1.000000000000000</double>
         </property>
@@ -68,14 +68,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="labelAnd">
         <property name="text">
          <string>and</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+       <widget class="QDoubleSpinBox" name="doubleSpinBoxFilterMaxSecurity">
         <property name="minimum">
          <double>-1.000000000000000</double>
         </property>

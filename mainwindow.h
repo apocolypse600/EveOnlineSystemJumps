@@ -36,9 +36,6 @@ private:
 
 private slots:
     void downloadFinished(QNetworkReply *reply);
-    void on_lineEdit_2_textChanged(const QString &arg1);
-    void on_doubleSpinBox_valueChanged(double arg1);
-    void on_doubleSpinBox_2_valueChanged(double arg1);
     void updateFilters();
 
 };

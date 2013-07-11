@@ -14,10 +14,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowTitle("Eve Online Jump Calculator");
 
+    //connect the filters to the correct slot
+    connect(ui->doubleSpinBoxFilterMinSecurity, SIGNAL(valueChanged(double)),this,SLOT(updateFilters()));
+    connect(ui->doubleSpinBoxFilterMaxSecurity, SIGNAL(valueChanged(double)),this,SLOT(updateFilters()));
+    connect(ui->lineEditNameFilter, SIGNAL(textChanged(QString)),this,SLOT(updateFilters()));
+
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setHostName("localhost");
     db.setDatabaseName("systemMap.db");
-    //db.setConnectOptions("QSQLITE_OPEN_READONLY");
 
     if (!db.open())
     {
@@ -103,24 +107,9 @@ void MainWindow::downloadFinished(QNetworkReply *reply)
     parseXML();
 }
 
-void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
-{
-    updateFilters();
-}
-
-void MainWindow::on_doubleSpinBox_valueChanged(double arg1)
-{
-    updateFilters();
-}
-
-void MainWindow::on_doubleSpinBox_2_valueChanged(double arg1)
-{
-    updateFilters();
-}
-
 void MainWindow::updateFilters()
 {
-    QString filter = "SOLARSYSTEMNAME LIKE '%" + ui->lineEdit_2->text() + "%'" +" AND SECURITY<='" + QString::number(ui->doubleSpinBox_2->value()) + "'" + "AND SECURITY>='" + QString::number(ui->doubleSpinBox->value()) + "'";
+    QString filter = "SOLARSYSTEMNAME LIKE '%" + ui->lineEditNameFilter->text() + "%'" +" AND SECURITY<='" + QString::number(ui->doubleSpinBoxFilterMaxSecurity->value()) + "'" + "AND SECURITY>='" + QString::number(ui->doubleSpinBoxFilterMinSecurity->value()) + "'";
     qDebug() <<"New Filter:" << filter;
     tableModel->setFilter(filter);
     //tableModel->select();
@@ -155,6 +144,7 @@ void MainWindow::parseXML()
     QDomNodeList rows = dataRoot.elementsByTagName("row");
     int numberOfRows = rows.count();
 
+    //Start the transaction with the database. If we do all the edits in one transaction it goes much, much faster
     db.transaction();
 
     for (int i = 0; i < numberOfRows ; ++i)
